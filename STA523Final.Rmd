@@ -1,0 +1,767 @@
+---
+title: "STA523 Final Exam"
+author: "Leonardo Shu M."
+date: "December 6, 2015"
+output: html_document
+runtime: shiny
+---
+
+Loading Packages:
+```{r}
+suppressWarnings(library(testthat, quietly = TRUE))
+suppressWarnings(library(httr, quietly = TRUE))
+suppressWarnings(library(shiny, quietly = TRUE))
+suppressWarnings(library(Rmisc, quietly = TRUE))
+suppressWarnings(library(graphics, quietly = TRUE))
+```
+
+IMPORTANT: Place to change the path for the csv file used in the Shiny App (so file compiles correctly):
+```{r}
+# Information of world capitals #
+worldCapitals = read.csv("C:/Users/Leo/Documents/STAT523/Final/worldcapitals.csv")
+```
+
+Sample sparse matrices:
+```{r}
+# Sample sparse matrix 1 #
+m1 = data.frame(matrix(c(1,2,1,2,1,5),2,3))
+colnames(m1) = c("row", "col", "value")
+m1$row = as.integer(m1$row)
+m1$col = as.integer(m1$col)
+m1$value = as.numeric(m1$value)
+s1 = list("nrow" = as.integer(2),
+          "ncol" = as.integer(2),
+          m1)
+s1[[3]]
+
+# Sample sparse matrix 2 (List elements re-ordered) #
+m1 = data.frame(matrix(c(1,2,1,2,1,5),2,3))
+colnames(m1) = c("row", "col", "value")
+m1$row = as.integer(m1$row)
+m1$col = as.integer(m1$col)
+m1$value = as.numeric(m1$value)
+s2 = list(m1,
+          "nrow" = as.integer(2),
+          "ncol" = as.integer(2))
+s2[[1]]
+
+# Sample sparse matrix 3 #
+m1 = data.frame(matrix(c(1,2,2,1,3,3,2,1,4,3,3,5),4,3, byrow = TRUE))
+colnames(m1) = c("row", "col", "value")
+m1$row = as.integer(m1$row)
+m1$col = as.integer(m1$col)
+m1$value = as.numeric(m1$value)
+s3 = list("nrow" = as.integer(3),
+          "ncol" = as.integer(3),
+          m1)
+s3[[3]]
+
+# Sample sparse matrix 4 (rectangular) #
+m1 = data.frame(matrix(c(3,1,7),1,3, byrow = TRUE))
+colnames(m1) = c("row", "col", "value")
+m1$row = as.integer(m1$row)
+m1$col = as.integer(m1$col)
+m1$value = as.numeric(m1$value)
+s4 = list("nrow" = as.integer(3),
+          "ncol" = as.integer(1),
+          m1)
+s4[[3]]
+
+# Sample sparse matrix 5 (rectangular) #
+m1 = data.frame(matrix(c(1,3,3),1,3, byrow = TRUE))
+colnames(m1) = c("row", "col", "value")
+m1$row = as.integer(m1$row)
+m1$col = as.integer(m1$col)
+m1$value = as.numeric(m1$value)
+s5 = list("nrow" = as.integer(1),
+          "ncol" = as.integer(3),
+          m1)
+s5[[3]]
+
+# Sample sparse matrix 6 (Large) #
+m1 = data.frame(matrix(c(1,2,7,1,3,8,5,2,9,10,1,6,10,2,5),5,3, byrow = TRUE))
+colnames(m1) = c("row", "col", "value")
+m1$row = as.integer(m1$row)
+m1$col = as.integer(m1$col)
+m1$value = as.numeric(m1$value)
+s6 = list("nrow" = as.integer(10),
+          "ncol" = as.integer(10),
+          m1)
+s6[[3]]
+
+# Sample sparse matrix 7 (All 0s) #
+m1 = data.frame(matrix(,0,3))
+colnames(m1) = c("row", "col", "value")
+m1$row = as.integer(m1$row)
+m1$col = as.integer(m1$col)
+m1$value = as.numeric(m1$value)
+s7 = list("nrow" = as.integer(5),
+          "ncol" = as.integer(5),
+          m1)
+s7[[3]]
+
+# Sample sparse matrix 8 (No 0s) #
+m1 = data.frame(matrix(c(1,1,1,1,2,1,2,1,1,2,2,1),4,3,byrow = TRUE))
+colnames(m1) = c("row", "col", "value")
+m1$row = as.integer(m1$row)
+m1$col = as.integer(m1$col)
+m1$value = as.numeric(m1$value)
+s8 = list("nrow" = as.integer(2),
+          "ncol" = as.integer(2),
+          m1)
+s8[[3]]
+
+# Sample sparse matrix 9 #
+m1 = data.frame(matrix(c(1,3,7,2,2,8,3,2,9,3,3,6),4,3,byrow = TRUE))
+colnames(m1) = c("row", "col", "value")
+m1$row = as.integer(m1$row)
+m1$col = as.integer(m1$col)
+m1$value = as.numeric(m1$value)
+s9 = list("nrow" = as.integer(3),
+          "ncol" = as.integer(3),
+          m1)
+s9[[3]]
+
+# Bad sample sparse matrix 1 (bad column names) #
+m1 = data.frame(matrix(c(1,2,1,2,1,5),2,3))
+colnames(m1) = c("Row", "Col", "Value")
+m1$Row = as.integer(m1$Row)
+m1$Col = as.integer(m1$Col)
+m1$Value = as.numeric(m1$Value)
+bs1 = list("nrow" = as.integer(2),
+           "ncol" = as.integer(2),
+           m1)
+bs1[[3]]
+
+# Bad sample sparse matrix 2 (nrow, ncol not integers)  #
+m1 = data.frame(matrix(c(1,2,1,2,1,5),2,3))
+colnames(m1) = c("row", "col", "value")
+m1$value = as.numeric(m1$value)
+bs2 = list(m1,
+           "nrow" = 2,
+           "ncol" = 2)
+bs2[[1]]
+
+# Bad sample sparse matrix 3 (nrow, ncol not positive) #
+m1 = data.frame(matrix(c(1,2,2,1,3,3,2,1,4,3,3,5),4,3, byrow = TRUE))
+colnames(m1) = c("row", "col", "value")
+m1$row = as.integer(m1$row)
+m1$col = as.integer(m1$col)
+m1$value = as.numeric(m1$value)
+bs3 = list("nrow" = as.integer(-3),
+           "ncol" = as.integer(1),
+           m1)
+bs3[[3]]
+```
+
+Sample dense matrices:
+```{r}
+# Sample dense matrix 1 #
+d1 = matrix(c(0,43,18,0,0,28,0,45,30), 3 , 3, byrow = TRUE)
+
+# Sample dense matrix 2 #
+d2 = matrix(c(0,0,3), 1, 3)
+
+# Sample dense matrix 3 #
+d3 = matrix(0, 10, 10)
+
+# Sample dense matrix 4 (All 0s) #
+d4 = matrix(0, 5, 5)
+
+# Sample dense matrix 5 (No 0s)#
+d5  = matrix(1, 2, 2)
+```
+
+1. Sparse Matrices\
+\
+Task 1 - Validation:\
+The way this function is structured assumes the input is TRUE, a valid sparse matrix representation, and then tests all the required conditions (size of list, correct labels, correct typing of the numbers, etc.) stated in the exam description in order and returns FALSE as soon as it encounters any violation.
+```{r}
+# Function to check for valid sparse matrix representation #
+isValid = function(sM){
+  
+  # Check if it is a list #
+  if(typeof(sM) != "list"){
+    return(FALSE)
+  }
+  
+  # Check if list has 3 elements #
+  if(length(sM) != 3){
+    return(FALSE)
+  }
+  
+  # Check if "nrow" is there #
+  if(any(names(sM) == "nrow")){
+    
+    # Check if "nrow" is an integer #
+    if(is.integer(sM[[which(names(sM) == "nrow")]]) != TRUE){
+      return(FALSE)
+    }
+    
+    # Check if "nrow" is positive #
+    if(sM[[which(names(sM) == "nrow")]] <= 0){
+      return(FALSE)
+    }
+  }
+  else{
+    return(FALSE)
+  }
+  
+  # Check if "ncol" is there #
+  if(any(names(sM) == "ncol")){
+    
+    # Check if "ncol" is an integer #
+    if(is.integer(sM[[which(names(sM) == "ncol")]]) != TRUE){
+      return(FALSE)
+    }
+    
+    # Check if "ncol" is positive #
+    if(sM[[which(names(sM) == "ncol")]] <= 0){
+      return(FALSE)
+    }
+  }
+  else{
+    return(FALSE)
+  }
+  
+  # Check if the remaining element is a data frame #
+  indexR = which(names(sM) == "nrow")
+  indexC = which(names(sM) == "ncol")
+  indexDF = 6 - (indexR + indexC)
+  df = sM[[indexDF]]
+  
+  if(is.data.frame(df) != TRUE){
+    return(FALSE)
+  }
+  
+  # Check if the data frame has the right number of columns #
+  if(dim(df)[2] != 3){
+    return(FALSE)
+  }
+  # Check if column names are correct and in order #
+  else if(colnames(df)[1] != "row" |
+          colnames(df)[2] != "col" |
+          colnames(df)[3] != "value"){
+    return(FALSE)
+  }
+  # Check if all columns have the correct types #
+  else if(typeof(df$row) != "integer" |
+          typeof(df$col) != "integer" |
+          typeof(df$value) != "double"){
+    return(FALSE)
+  }
+  # Check if row & column values are positive #
+  else if(any(df$row <= 0) | any(df$col <= 0)){
+    return(FALSE)
+  }
+  # Check the ordering of the rows is correct (e.g first by row value then by col value) #
+  #check this#
+  else if(identical(df$row, sort(df$row)) != TRUE){
+    return(FALSE)
+  }
+  
+  # If all conditions are satisfied then representation is valid #
+  return(TRUE)
+}
+```
+Testing isValid():
+```{r}
+test_that("sparse matrices are valid",{
+  expect_true(isValid(s1))
+  expect_true(isValid(s2))
+  expect_true(isValid(s3))
+  expect_true(isValid(s4))
+  expect_true(isValid(s5))
+  expect_true(isValid(s6))
+})
+
+test_that("bad sparse matrices are invalid",{
+  expect_false(isValid(bs1))
+  expect_false(isValid(bs2))
+  expect_false(isValid(bs3))
+  expect_false(isValid(c(2,2,1)))
+})
+```
+
+Task 2 - Transform Sparse Matrix:\
+This transformation function first checks if the input is a valid sparse matrix representation and gives an error otherwise. If correct, it initializes an empty matrix with the correct dimensions and then fills it up according to the data frame component of the sparse matrix list. After this is done, the resulting dense matrix is returned.
+```{r}
+# Function to transform matrix from sparse to dense #
+transformSD = function(sM){
+  
+  # Checking input validity #
+  if(isValid(sM) != TRUE){
+    stop("Error: Input is not a sparse matrix representation")
+  }
+  
+  # Creating empty matrix with right dimensions #
+  dM = matrix(0, nrow = sM$nrow, ncol = sM$ncol)
+  
+  # Extracting the dataframe #
+  indexR = which(names(sM) == "nrow")
+  indexC = which(names(sM) == "ncol")
+  indexDF = 6 - (indexR + indexC)
+  df = sM[[indexDF]]
+  
+  # Filling the matrix #
+  for(i in 1:dim(df)[1]){
+    # Getting correct indices #
+    rowI = df$row[i]
+    colI = df$col[i]
+    
+    dM[rowI, colI] = df$value[i]
+  }
+  
+  return(dM)
+}
+```
+Testing transformSD():
+```{r}
+test_that("return values are actual dense matrices",{
+  expect_true(is.matrix(transformSD(s1)))
+  expect_true(is.matrix(transformSD(s2)))
+})
+
+test_that("matrices have the correct values",{
+  expect_true(identical(transformSD(s1),
+                         matrix(c(1,0,0,5),2,2,byrow = TRUE)))
+  expect_true(identical(transformSD(s4),
+                         matrix(c(0,0,7),3,1)))
+  expect_true(identical(transformSD(s5),
+                         matrix(c(0,0,3),1,3)))
+  expect_true(identical(transformSD(s7),
+                         matrix(0,5,5)))
+})
+
+test_that("invalid sparse matrices return errors",{
+  expect_error(transformSD(bs1))
+  expect_error(transformSD(bs2))
+  expect_error(transformSD(bs3))
+})
+```
+
+Task 3 - Transform Dense Matrix:\
+This transformation function first checks if the input is a valid matrix and gives an error otherwise. If correct, it obtains the nrow & ncol list elements by the dimesions of the dense matrix. The data frame element is obtained through a couple of steps; first we collect the row & column indices of every non-zero element, order them by row value then column value and then bind their respective values. We then return the sparse matrix list with all 3 necessary elements in the order of nrow, ncol & data frame.
+```{r}
+# Function to transform matrix from dense to sparse #
+transformDS = function(dM){
+  
+  # Checking input validity #
+  if(is.matrix(dM) != TRUE){
+    stop("Error: Input is not a matrix")
+  }
+  
+  # Obtaining matrix dimensions #
+  rowN = as.integer(dim(dM)[1])
+  colN = as.integer(dim(dM)[2])
+  
+  # Obtaining the row and column indices of non-zero elements #
+  #NEED TO FIX THIS to order properly#
+  df = which(dM != 0, arr.ind = TRUE)
+  
+  # Ordering data frame per specifications (i.e row value the col value)#
+  if(dim(df)[1] == 0){
+    df = as.data.frame(matrix(0,0,3))
+  }
+  else if(dim(df)[1] != 1){
+    df = as.data.frame(df[order(df[, 1], df[, 2]), ])
+  }
+  else{
+    df = as.data.frame(df)
+  }
+  
+  # Vector to store non-zero values #
+  v = c()
+  
+  # Filling the vector of non-zero values #
+  if(dim(df)[1] == 0){
+    colnames(df) = c("row", "col", "value")
+    df$row = as.integer(df$row)
+    df$col = as.integer(df$col)
+    df$value = as.numeric(df$value)
+  }
+  else{
+    for(i in 1:dim(df)[1]){
+      indexR = df$row[i]
+      indexC = df$col[i]
+    
+      v[i] = dM[indexR, indexC]
+    }
+    # Binding vector to data frame #
+    df$value = v
+  }
+  
+  # Binding vector to data frame #
+  #df$value = v
+  
+  # Constructing sparse matrix #
+  sM = list("nrow" = rowN, "ncol" = colN, df)
+
+  return(sM)
+}
+```
+Testing transformDS():
+```{r}
+test_that("return values are actual sparse matrix representations",{
+  expect_true(isValid(transformDS(d1)))
+  expect_true(isValid(transformDS(d2)))
+  expect_true(isValid(transformDS(d3)))
+  expect_true(isValid(transformDS(d4)))
+  expect_true(isValid(transformDS(d5)))
+})
+
+test_that("matrices have the correct values",{
+  expect_true(identical(transformDS(d2), s5))
+  expect_true(identical(transformDS(d4), s7))
+  expect_true(identical(transformDS(d5), s8))
+})
+
+test_that("invalid dense matrices return errors",{
+  expect_error(transformDS(1))
+  expect_error(transformDS("matrix"))
+})
+
+test_that("transformSD and transformDS are inverse functions",{
+  expect_true(identical(s1, transformDS(transformSD(s1))))
+  expect_true(identical(d1, transformSD(transformDS(d1))))
+})
+```
+
+Task 4 - Matrix Multiplication:\
+This function has two stages divided into verifying the types of the input matrices & then performing the appropriate multiplication. After ensuring that the inputs are valid sparse and/or dense matrices (returning errors when they are not) the function looks at the combination of matrix pairs. If at least one of the inputs is a dense matrix then we simply use the basic matrix multiplication command %*% (converting a sparse matrix to a dense one first if necessary) & return the resulting dense matrix. However, if both inputs are sparse, then we need to follow a particular algorithm (found on http://mathforum.org/library/drmath/view/51903.html) whereby we use two for-loops to find every instance where an element from matrix 1 multiplies with an element from matrix 2. As we do this, we also store the information for the data frame element of the product sparse matrix list. Once this is done, we format all the elements for the list according to the exam description (e.g values are correctly integers or numerics) and return it.
+```{r}
+MM = function(m1, m2){
+  
+  # Booleans to identify type of matrix used #
+  m1Sparse = TRUE
+  m2Sparse = TRUE
+  
+  #put cut code here#
+  # Check for validity of inputs #
+  if(isValid(m1) == FALSE){
+    if(is.matrix(m1) == FALSE){
+      stop("Error: First input is incorrect")
+    }
+    else{
+      # m1 is a dense matrix #
+      m1Sparse = FALSE
+      m1Dim = dim(m1)
+    }
+  }
+  else{
+    # m1 is a sparse matrix #
+    m1Dim = c()
+    m1Dim[1] = m1$nrow
+    m1Dim[2] = m1$ncol
+  }
+  
+  if(isValid(m2) == FALSE){
+    if(is.matrix(m2) == FALSE){
+      stop("Error: Second input is incorrect")
+    }
+    else{
+      # m2 is a dense matrix #
+      m2Sparse = FALSE
+      m2Dim = dim(m2)
+    }
+  }
+  else{
+    # m2 is a sparse matrix #
+    m2Dim = c()
+    m2Dim[1] = m2$nrow
+    m2Dim[2] = m2$ncol
+  }
+
+  # Check matrices are conforming #
+  if(m1Dim[2] != m2Dim[1]){
+    stop("Error: Matrices are non-conforming")
+  }
+  
+  # dense %*% dense #
+  if(m1Sparse == FALSE & m2Sparse == FALSE){
+    return(m1 %*% m2)
+  }
+  # sparse %*% dense #
+  else if(m1Sparse == TRUE & m2Sparse == FALSE){
+    denseM1 = transformSD(m1)
+    return(denseM1 %*% m2)
+  }
+  # dense %*% sparse #
+  else if(m1Sparse == FALSE & m2Sparse == TRUE){
+    denseM2 = transformSD(m2)
+    return(m1 %*% denseM2)
+  }
+  # sparse %*% sparse #
+  else{
+    
+    # Product matrix dimensions #
+    rowN = as.integer(m1Dim[1])
+    colN = as.integer(m2Dim[2])
+    #rowN = as.integer(3)
+    #colN = as.integer(3)
+    
+    # Creating empty product matrix represntation #
+    prodM = c()
+    
+    # Extracting dataframes #
+    indexR1 = which(names(m1) == "nrow")
+    indexC1 = which(names(m1) == "ncol")
+    indexDF1 = 6 - (indexR1 + indexC1)
+    df1 = m1[[indexDF1]]
+    
+    indexR2 = which(names(m2) == "nrow")
+    indexC2 = which(names(m2) == "ncol")
+    indexDF2 = 6 - (indexR2 + indexC2)
+    df2 = m2[[indexDF2]]
+    
+    # Multiplying sparse matrices #
+    for(i in 1:dim(df1)[1]){
+      for(j in 1:dim(df2)[1]){
+        if(df1$col[i] == df2$row[j]){
+          # Obtaining correct indices for resulting product #
+          rowI = df1$row[i]
+          colI = df2$col[j]
+          
+          # First case with empty dataframe #
+          if(is.null(prodM)){
+            prodM = rbind(prodM, c(rowI, colI, (df1$value[i] * df2$value[j])))
+            # Once this is filled then move to the next row #
+            break
+            #print("First")
+            #print(df1$value[i] * df2$value[j])
+          }
+          
+          # Check for duplicates so as to not add extra rows #
+          duplicates = FALSE
+          for(k in 1:dim(prodM)[1]){
+            if(rowI == prodM[k,1] & colI == prodM[k,2]){
+              prodM[k,3] = prodM[k,3] + (df1$value[i] * df2$value[j])
+              duplicates = TRUE
+              #print("Second")
+              #print(df1$value[i] * df2$value[j])
+            }
+          }
+          
+          # Else just create new row #
+          if(duplicates == FALSE){
+            prodM = rbind(prodM, c(rowI, colI, (df1$value[i] * df2$value[j])))
+            #print("Third")
+            #print(df1$value[i] * df2$value[j])
+          }
+        }
+      }
+    }
+    
+    # Format to specifications #
+    prodM = as.data.frame(prodM)
+    colnames(prodM) = c("row", "col", "value")
+    prodM$row = as.integer(prodM$row)
+    prodM$col = as.integer(prodM$col)
+    prodM$value = as.numeric(prodM$value)
+    
+    # Return sparse matrix representation #
+    prodSM = list("nrow" = rowN, "ncol" = colN, prodM)
+    return(prodSM)
+  }
+}
+```
+Testing MM():
+```{r}
+test_that("multiplications are correct",{
+  expect_true(identical(transformSD(MM(s1,s1)),
+                        matrix(c(1,0,0,25),2,2,byrow = TRUE)))
+  expect_true(identical(MM(s3, s9), transformDS(d1)))
+  expect_true(identical(MM(d3, d3), d3))
+})
+
+test_that("output type is correct",{
+  expect_true(is.matrix(MM(d1,d1)))
+  expect_true(isValid(MM(s2,s2)))
+  expect_true(is.matrix(MM(s2,d5)))
+  expect_true(is.matrix(MM(d5,s2)))
+})
+
+test_that("invalid inputs return errors (wrong type or non-conformig dimensions)",{
+  expect_error(MM(s1,d1))
+  expect_error(MM(s5,s5))
+  expect_error(MM(d2,d2))
+  expect_error(MM(s1,bs1))
+  expect_error(MM(d5,1))
+})
+```
+
+2. Shiny Weather\
+\
+Task 1 - Getting data from forecast.io:\
+We create a quite simple function that uses the Dark Sky Forecast API to obtain relevant weather forecast information on the locaton marked by the input coordinates. The data returned by this website os very detailed and it offers alot more than what we really need so part of the job of getForecast() is to trim the results obtained. The actual object returned will be a list with different types of elements like numbers (e.g latitude, longitude), strings (e.g timezone) and nested lists too (e.g hourly information). Having learned the sructure of the retrieved contents via  "https://developer.forecast.io/docs/v2#forecast_call", the function throws away "daily", "currently" & "minutely" data since we want to focus just on "hourly" forecasts. We note that the API returns the forecast on the next 49 hours.
+```{r}
+# API Key #
+API = "fa4c71e38e79df3130896068cbaf2d28"
+
+# Example coordinates from Durham #
+latDurham = "35.9886"
+lonDurham = "-78.9072"
+
+# Function to get required forecast data frame for particular coordinates
+# Note we use the httr package to do this #
+getForecast = function(key, lat, lon){
+  # Base URL #
+  URL = paste0("https://api.forecast.io/forecast/", key, "/", lat, ",", lon)
+  
+  # Retrieving #
+  stuff = GET(URL)
+  
+  # Unpacking #
+  listForecast = content(stuff)
+  
+  # Removing excess content #
+  listForecast = listForecast[c("latitude", "longitude", "timezone",
+                                "offset", "hourly", "flags")]
+  
+  return(listForecast)
+}
+
+# Weather data for Durham #
+forecastDurham = getForecast(API, latDurham, lonDurham)
+```
+Example of main components retrieved:
+```{r}
+names(forecastDurham)
+```
+Getting back Durham's coordinates:
+```{r}
+c(forecastDurham$latitude, forecastDurham$longitude)
+```
+Nested listed for hourly data ("data" is also a list):
+```{r}
+names(forecastDurham$hourly)
+```
+List of the elements in the 1st hour (out of 49) of the "data" list for hourly information:
+```{r}
+forecastDurham$hourly$data[[1]]
+```
+As such, these commands will allow us to extract the necessary information to get our forecast app working.\
+\
+Task 2 - Shiny predictions:\
+This Shiny app displays various information about hourly forecasts of a particular city chosen. Users just need to select which city do they want their forecast on. The dataframe worldCapitals, which includes some of the most famous capitals in the world alongside their latitutde & longitude, is stored in worldcapitals.csv which was found online, attached by an user in the comments at https://community.tableau.com/thread/109575. For efficiency reasons (Shiny seems to freeze when more than 75 cities are used) the list of options will be a sample of 75 capitals which still showcase all of what the application does.\
+\
+Using the getforecast() function from before with a default API key and the corresponding coordinates of the city chosen, the app retrieves the relevant information, formats it (e.g time units to more readable forms) & plots the forecast temperature for the next 49 hours.\
+\
+The user has some other options in the app, they can choose to display or hide the timezone related to the chosen city, or they can choose to plot barometric pressure as well, which will plot on the existing temperature graph for a direct visual comparison.
+```{r, echo=FALSE}
+# Formatting the capital names #
+capitalsName = as.character(levels(worldCapitals$Name))[1:75]
+
+# Obtaining coordinates #
+capitalsLat = worldCapitals$Latitude[1:75]
+capitalsLon = worldCapitals$Longitude[1:75]
+
+# Start the app layout #
+titlePanel("Hourly Forecast for Popular Capitals")
+
+# Decorative icons #
+icon("cloud", class ="cloud fa-5x")
+icon("soundcloud", class = "soundcloud fa-5x")
+icon("sun-o", class = "sun-o fa-5x")
+
+sidebarPanel(
+  inputPanel(
+    selectInput("cities", label = "Choose a city:",
+                choices = capitalsName, selected = "Beijing"),
+    actionButton("tz", label = "Toggle Time Zone", icon = icon("clock-o")),
+    checkboxInput("press", "Plot pressure", FALSE)
+  ),
+  
+  # Always show corresponding coordinates #
+  renderTable(displayLatLon()),
+  
+  # Show time zone #
+  renderText(
+    # Each clickof the button increase a counter
+    # so only odd numbers will display the text #
+    if((input$tz %% 2) != 0){
+       paste0("Time Zone: ", cityForecast()$timezone)
+    }
+  )
+)
+
+# Make table of corresponding coordinates to be displayed #
+displayLatLon = reactive(
+  {
+    latLon = as.data.frame(cbind(capitalsLat[which(capitalsName == input$cities)],
+                  capitalsLon[which(capitalsName == input$cities)]))
+    colnames(latLon) = c("Latitude", "Longitude")
+    rownames(latLon) = ""
+    return(latLon)
+  }
+)
+
+# Get the forecast data #
+cityForecast = reactive(
+  {
+    # API Key #
+    API = "fa4c71e38e79df3130896068cbaf2d28"
+    
+    # Coordinates #
+    cityLat = capitalsLat[which(capitalsName == input$cities)]
+    cityLon = capitalsLon[which(capitalsName == input$cities)]
+    
+    forecast = getForecast(API, cityLat, cityLon)
+    
+    return(forecast)
+  }
+)
+
+# Subset & format the forecast information #
+hourlyInfo = reactive(
+  {
+    # Extracting hours, temperature & pressure #
+    hours = list()
+    temp = c()
+    press = c()
+    for(i in 1:length(cityForecast()$hourly$data)){
+      hours[i] = cityForecast()$hourly$data[[i]]$time
+      temp[i] = cityForecast()$hourly$data[[i]]$temperature
+      press[i] = cityForecast()$hourly$data[[i]]$pressure
+    }
+    hours = unlist(hours)
+
+    # Creating time series data frame #
+    mTemp = as.data.frame(cbind(hours, temp, press))
+
+    # Converting times #
+    mTemp$hours = as.POSIXct(mTemp$hours, tz = "GMT", origin = "1970-01-01")
+    
+    return(mTemp)
+  }
+)
+
+# Output Panel #
+mainPanel(
+  renderPlot(
+    {
+      # Plotting hourly temperature #
+      #par(mar=c(5,4,4,5)+0.1)
+      plot(x = hourlyInfo()$hours, y = hourlyInfo()$temp,
+           xlab = "Hours", ylab = "Temperature (F)", xaxt = "n", type = "l", col = "red")
+      axis.POSIXct(side = 1, at = hourlyInfo()$hours)
+      grid()
+      
+      # If option is selected plot pressure on same graph #
+      if(input$press == TRUE){
+        par(new=TRUE)
+        plot(x = hourlyInfo()$hours, y=hourlyInfo()$press,
+             type = "l", col = "blue", xaxt = "n", yaxt = "n", xlab = "", ylab = "")
+        
+        # Include new y-axis #
+        axis(side = 4)
+        mtext("Pressure (mb)", side = 4)
+        
+        # Including legend #
+        legend("topright", col = c("red","blue"), lty = 1,
+               legend = c("Temperature", "Pressure"))
+      }
+    }
+  )
+)
+```
